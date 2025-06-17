@@ -25,9 +25,10 @@ public class UserService {
         return userMapper.userToDto(createdUser);
     }
 
-    public UserDto update(User user, Long id) {
+    public UserDto update(UserDto user, Long id) {
         userRepository.findById(id);
-        User updatedUser = userRepository.update(user, id);
+        User userToUpdate = userMapper.dtoToUser(user);
+        User updatedUser = userRepository.update(userToUpdate, id);
         return userMapper.userToDto(updatedUser);
     }
 

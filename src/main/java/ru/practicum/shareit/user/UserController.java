@@ -7,7 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.user.dto.UserDto;
-import ru.practicum.shareit.user.model.User;
 
 @Validated
 @Slf4j
@@ -30,7 +29,7 @@ public class UserController {
     }
 
     @PatchMapping("/{id}")
-    public UserDto update(@RequestBody User user, @PathVariable @Min(1) Long id) {
+    public UserDto update(@RequestBody UserDto user, @PathVariable @Min(1) Long id) {
         log.info("Получен HTTP-запрос на обновление пользователя c id = {} : {}", id, user);
         return userService.update(user, id);
     }

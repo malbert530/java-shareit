@@ -22,12 +22,9 @@ public class ItemService {
 
     public List<ItemDto> getAllItems(Long userId) {
         userRepository.findById(userId);
-        List<Item> allUserItems = itemRepository.findAllUserItems(userId);
-        List<ItemDto> allUserItemsDto = new ArrayList<>();
-        for (Item item : allUserItems) {
-            allUserItemsDto.add(itemMapper.itemToDto(item));
-        }
-        return allUserItemsDto;
+        return itemRepository.findAllUserItems(userId).stream()
+                .map(itemMapper::itemToDto)
+                .toList();
     }
 
     public ItemDto getItemById(Long itemId) {
@@ -39,11 +36,11 @@ public class ItemService {
         userRepository.findById(userId);
         Item item = itemMapper.dtoToItem(itemDto);
         item.setOwnerId(userId);
-        Item createdItem = itemRepository.create(item, userId);
+        Item createdItem = itemRepository.create(item);
         return itemMapper.itemToDto(createdItem);
     }
 
-    public ItemDto update(Item item, Long itemId, Long userId) {
+    public ItemDto update(ItemDto item, Long itemId, Long userId) {
         userRepository.findById(userId);
         Item existItem = itemRepository.findItemById(itemId);
         if (!existItem.getOwnerId().equals(userId)) {
@@ -51,18 +48,17 @@ public class ItemService {
             log.warn(errorMessage);
             throw new UserNotFoundException(errorMessage);
         }
-        Item updatedItem = itemRepository.update(item, itemId, userId);
+        Item itemToUpdate = itemMapper.dtoToItem(item);
+        Item updatedItem = itemRepository.update(itemToUpdate, itemId);
         return itemMapper.itemToDto(updatedItem);
     }
 
     public List<ItemDto> getItemsBySearch(String text) {
         List<ItemDto> itemsDtoBySearch = new ArrayList<>();
         if (!text.isBlank()) {
-            List<Item> itemsBySearch = itemRepository.getItemsBySearch(text.toLowerCase());
-            for (Item bySearch : itemsBySearch) {
-                ItemDto itemDto = itemMapper.itemToDto(bySearch);
-                itemsDtoBySearch.add(itemDto);
-            }
+            itemsDtoBySearch = itemRepository.getItemsBySearch(text.toLowerCase()).stream()
+                    .map(itemMapper::itemToDto)
+                    .toList();
         }
         return itemsDtoBySearch;
     }

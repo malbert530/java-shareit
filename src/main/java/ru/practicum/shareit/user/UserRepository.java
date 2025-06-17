@@ -42,7 +42,7 @@ public class UserRepository {
 
     public User update(User newFieldsUser, Long id) {
         User oldUser = users.get(id);
-        if (newFieldsUser.hasEmail()) {
+        if (newFieldsUser.hasEmail() && !newFieldsUser.getEmail().equals(oldUser.getEmail())) {
             checkEmailExist(newFieldsUser.getEmail());
             oldUser.setEmail(newFieldsUser.getEmail());
         }
