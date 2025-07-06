@@ -5,7 +5,9 @@ import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemWithDateDto;
 
 import java.util.List;
 
@@ -17,13 +19,13 @@ public class ItemController {
     private final ItemService itemService;
 
     @GetMapping
-    public List<ItemDto> getAllItems(@RequestHeader("X-Sharer-User-Id") Long userId) {
+    public List<ItemWithDateDto> getAllItems(@RequestHeader("X-Sharer-User-Id") Long userId) {
         log.info("Получен HTTP-запрос на получение всех вещей пользователя с id {}", userId);
         return itemService.getAllItems(userId);
     }
 
     @GetMapping("/{itemId}")
-    public ItemDto getItemById(@PathVariable Long itemId) {
+    public ItemWithDateDto getItemById(@PathVariable Long itemId) {
         log.info("Получен HTTP-запрос на получение вещи по id {}", itemId);
         return itemService.getItemById(itemId);
     }
@@ -44,5 +46,11 @@ public class ItemController {
     public ItemDto update(@RequestHeader("X-Sharer-User-Id") Long userId, @RequestBody ItemDto item, @PathVariable @Min(1) Long itemId) {
         log.info("Получен HTTP-запрос на обновление вещи c id = {} : {}", itemId, item);
         return itemService.update(item, itemId, userId);
+    }
+
+    @PostMapping("/{itemId}/comment")
+    public CommentDto createComment(@RequestHeader("X-Sharer-User-Id") Long userId, @PathVariable Long itemId, @RequestBody @Valid CommentDto commentDto) {
+        log.info("Получен HTTP-запрос на создание комментария к вещи: {}", commentDto);
+        return itemService.createComment(userId, itemId, commentDto);
     }
 }
