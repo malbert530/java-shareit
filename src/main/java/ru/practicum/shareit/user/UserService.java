@@ -18,8 +18,7 @@ public class UserService {
 
 
     public UserDto getUserById(Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("Пользователь с id " + id + " не существует"));
+        User user = getUserIfExistOrElseThrow(id);
         return UserMapper.userToDto(user);
     }
 
@@ -38,8 +37,7 @@ public class UserService {
 
     @Transactional
     public UserDto update(UserDto user, Long id) {
-        User oldUser = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("Пользователь с id " + id + " не существует"));
+        User oldUser = getUserIfExistOrElseThrow(id);
         if (user.getEmail() != null) {
             oldUser.setEmail(user.getEmail());
         }
@@ -50,10 +48,14 @@ public class UserService {
         return UserMapper.userToDto(updatedUser);
     }
 
+    public User getUserIfExistOrElseThrow(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException("Пользователь с id " + id + " не существует"));
+    }
+
     @Transactional
     public UserDto delete(Long id) {
-        User userToDelete = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("Пользователь с id " + id + " не существует"));
+        User userToDelete = getUserIfExistOrElseThrow(id);
         userRepository.deleteById(id);
         return UserMapper.userToDto(userToDelete);
     }

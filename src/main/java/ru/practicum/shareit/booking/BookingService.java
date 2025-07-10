@@ -7,9 +7,9 @@ import ru.practicum.shareit.booking.dto.BookingResponseDto;
 import ru.practicum.shareit.booking.mapper.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.exception.*;
-import ru.practicum.shareit.item.ItemRepository;
+import ru.practicum.shareit.item.ItemService;
 import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.user.UserRepository;
+import ru.practicum.shareit.user.UserService;
 import ru.practicum.shareit.user.model.User;
 
 import java.time.LocalDateTime;
@@ -19,16 +19,21 @@ import java.util.List;
 @RequiredArgsConstructor
 public class BookingService {
     private final BookingRepository bookingRepository;
-    private final UserRepository userRepository;
-    private final ItemRepository itemRepository;
+    private final UserService userService;
+    private final ItemService itemService;
 
     public BookingResponseDto getBookingById(Long bookingId) {
-        Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new BookingNotFoundException("Бронирование с id " + bookingId + " не существует"));
+        Booking booking = getBookingIfExistOrElseThrow(bookingId);
         return BookingMapper.bookingToDto(booking);
     }
 
+    private Booking getBookingIfExistOrElseThrow(Long bookingId) {
+        return bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new BookingNotFoundException("Бронирование с id " + bookingId + " не существует"));
+    }
+
     public List<BookingResponseDto> getAllBookerBookings(Long userId, State state) {
+        userService.getUserIfExistOrElseThrow(userId);
         LocalDateTime now = LocalDateTime.now();
         if (state.equals(State.ALL)) {
             List<Booking> allBookings = bookingRepository.findByBookerId(userId);
@@ -69,8 +74,7 @@ public class BookingService {
     }
 
     public List<BookingResponseDto> getAllOwnerBookings(Long userId, State state) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("Пользователь с id " + userId + " не существует"));
+        userService.getUserIfExistOrElseThrow(userId);
         LocalDateTime now = LocalDateTime.now();
         if (state.equals(State.ALL)) {
             List<Booking> allBookings = bookingRepository.findAllByItemOwnerIdOrderByStartDesc(userId);
@@ -111,11 +115,14 @@ public class BookingService {
     }
 
     public BookingResponseDto create(Long userId, BookingCreateDto bookingCreateDto) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("Пользователь с id " + userId + " не существует"));
+        User user = userService.getUserIfExistOrElseThrow(userId);
+        if (!bookingCreateDto.getStart().isBefore(bookingCreateDto.getEnd())) {
+            String errorMessage = String.format("Дата старта аренды %s должна быть раньше даты окончания %s",
+                    bookingCreateDto.getStart().toString(), bookingCreateDto.getEnd().toString());
+            throw new ValidationException(errorMessage);
+        }
         Long itemId = bookingCreateDto.getItemId();
-        Item item = itemRepository.findById(bookingCreateDto.getItemId())
-                .orElseThrow(() -> new ItemNotFoundException("Вещь с id " + itemId + " не существует"));
+        Item item = itemService.getItemIfExistOrElseThrow(itemId);
         if (!item.getAvailable()) {
             String errorMessage = String.format("Вещь с id %d недоступна бля бронирования", itemId);
             throw new ItemNotAvailableException(errorMessage);
@@ -126,8 +133,11 @@ public class BookingService {
     }
 
     public BookingResponseDto approveByOwner(Long userId, Long bookingId, boolean approved) {
-        Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new BookingNotFoundException("Бронирование с id " + bookingId + " не существует"));
+        Booking booking = getBookingIfExistOrElseThrow(bookingId);
+        if (!booking.getStatus().equals(Status.WAITING)) {
+            String errorMessage = String.format("Статус бронирования уже %s, подтверждение не требуется", booking.getStatus());
+            throw new ValidationException(errorMessage);
+        }
         Long itemId = booking.getItem().getId();
         if (!booking.getItem().getOwner().getId().equals(userId)) {
             String errorMessage = String.format("Пользователь с id %d не является владельцем вещи с id %d", userId, itemId);

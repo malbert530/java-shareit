@@ -15,7 +15,7 @@ import ru.practicum.shareit.item.mapper.CommentMapper;
 import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.user.UserRepository;
+import ru.practicum.shareit.user.UserService;
 import ru.practicum.shareit.user.model.User;
 
 import java.time.LocalDateTime;
@@ -27,13 +27,12 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ItemService {
     private final ItemRepository itemRepository;
-    private final UserRepository userRepository;
     private final BookingRepository bookingRepository;
     private final CommentRepository commentRepository;
+    private final UserService userService;
 
     public List<ItemWithDateDto> getAllItems(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("Пользователь с id " + userId + " не существует"));
+        User user = userService.getUserIfExistOrElseThrow(userId);
 
         Map<Item, List<Booking>> bookedItems = bookingRepository
                 .findAllByItemOwnerIdAndStartAfterOrderByStartDesc(userId, LocalDateTime.now())
@@ -67,15 +66,18 @@ public class ItemService {
     }
 
     public ItemWithDateDto getItemById(Long itemId) {
-        Item itemById = itemRepository.findById(itemId)
-                .orElseThrow(() -> new ItemNotFoundException("Вещь с id " + itemId + " не существует"));
+        Item itemById = getItemIfExistOrElseThrow(itemId);
         List<CommentDto> comments = commentRepository.findByItemId(itemId).stream().map(CommentMapper::toDto).toList();
         return ru.practicum.shareit.item.mapper.ItemMapper.itemToDtoWithDate(itemById, comments, null, null);
     }
 
+    public Item getItemIfExistOrElseThrow(Long itemId) {
+        return itemRepository.findById(itemId)
+                .orElseThrow(() -> new ItemNotFoundException("Вещь с id " + itemId + " не существует"));
+    }
+
     public ItemDto create(Long userId, ItemDto itemDto) {
-        User owner = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("Пользователь с id " + userId + " не существует"));
+        User owner = userService.getUserIfExistOrElseThrow(userId);
         Item item = ru.practicum.shareit.item.mapper.ItemMapper.dtoToItem(itemDto);
         item.setOwner(owner);
         Item createdItem = itemRepository.save(item);
@@ -83,10 +85,8 @@ public class ItemService {
     }
 
     public ItemDto update(ItemDto item, Long itemId, Long userId) {
-        userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("Пользователь с id " + userId + " не существует"));
-        Item existItem = itemRepository.findById(itemId)
-                .orElseThrow(() -> new ItemNotFoundException("Вещь с id " + itemId + " не существует"));
+        userService.getUserIfExistOrElseThrow(userId);
+        Item existItem = getItemIfExistOrElseThrow(itemId);
         if (!existItem.getOwner().getId().equals(userId)) {
             String errorMessage = String.format("Пользователь с id = %d не является владельцем вещи с itemId = %d", userId, itemId);
             log.warn(errorMessage);
@@ -117,10 +117,8 @@ public class ItemService {
     }
 
     public CommentDto createComment(Long userId, Long itemId, CommentDto commentDto) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("Пользователь с id " + userId + " не существует"));
-        Item existItem = itemRepository.findById(itemId)
-                .orElseThrow(() -> new ItemNotFoundException("Вещь с id " + itemId + " не существует"));
+        User user = userService.getUserIfExistOrElseThrow(userId);
+        Item existItem = getItemIfExistOrElseThrow(itemId);
         List<Booking> bookings = bookingRepository.findByItemIdAndBookerIdAndEndBefore(itemId, userId, LocalDateTime.now());
         if (bookings.isEmpty()) {
             String errorMessage = String.format("Пользователь с id = %d не арендовал вещь с itemId = %d или аренда еще не заверщилась", userId, itemId);
