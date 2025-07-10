@@ -84,5 +84,11 @@ public class GlobalExceptionHandler {
     public ApiError handleCommentException(CommentException e) {
         return ApiError.builder().error(e.getMessage()).errorCode(HttpStatus.BAD_REQUEST.value()).build();
     }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiError handleWrongBookingDatesException(WrongBookingDatesException e) {
+        return ApiError.builder().error(e.getMessage()).errorCode(HttpStatus.BAD_REQUEST.value()).build();
+    }
 }
 
