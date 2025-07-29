@@ -7,6 +7,7 @@ import ru.practicum.shareit.booking.BookingRepository;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.exception.CommentException;
 import ru.practicum.shareit.exception.ItemNotFoundException;
+import ru.practicum.shareit.exception.ItemRequestNotFoundException;
 import ru.practicum.shareit.exception.UserNotFoundException;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
@@ -15,6 +16,8 @@ import ru.practicum.shareit.item.mapper.CommentMapper;
 import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.request.ItemRequestRepository;
+import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.user.UserService;
 import ru.practicum.shareit.user.model.User;
 
@@ -30,6 +33,7 @@ public class ItemService {
     private final BookingRepository bookingRepository;
     private final CommentRepository commentRepository;
     private final UserService userService;
+    private final ItemRequestRepository itemRequestRepository;
 
     public List<ItemWithDateDto> getAllItems(Long userId) {
         User user = userService.getUserIfExistOrElseThrow(userId);
@@ -68,7 +72,7 @@ public class ItemService {
     public ItemWithDateDto getItemById(Long itemId) {
         Item itemById = getItemIfExistOrElseThrow(itemId);
         List<CommentDto> comments = commentRepository.findByItemId(itemId).stream().map(CommentMapper::toDto).toList();
-        return ru.practicum.shareit.item.mapper.ItemMapper.itemToDtoWithDate(itemById, comments, null, null);
+        return ItemMapper.itemToDtoWithDate(itemById, comments, null, null);
     }
 
     public Item getItemIfExistOrElseThrow(Long itemId) {
@@ -78,10 +82,16 @@ public class ItemService {
 
     public ItemDto create(Long userId, ItemDto itemDto) {
         User owner = userService.getUserIfExistOrElseThrow(userId);
-        Item item = ru.practicum.shareit.item.mapper.ItemMapper.dtoToItem(itemDto);
+        ItemRequest request = null;
+        if (itemDto.getRequestId() != null) {
+            request = itemRequestRepository.findById(itemDto.getRequestId())
+                    .orElseThrow(() -> new ItemRequestNotFoundException("Запроса с id " + itemDto.getRequestId() + " не существует"));
+        }
+        Item item = ItemMapper.dtoToItem(itemDto);
         item.setOwner(owner);
+        item.setRequest(request);
         Item createdItem = itemRepository.save(item);
-        return ru.practicum.shareit.item.mapper.ItemMapper.itemToDto(createdItem);
+        return ItemMapper.itemToDto(createdItem);
     }
 
     public ItemDto update(ItemDto item, Long itemId, Long userId) {
@@ -102,7 +112,7 @@ public class ItemService {
             existItem.setDescription(item.getDescription());
         }
         Item updatedItem = itemRepository.save(existItem);
-        return ru.practicum.shareit.item.mapper.ItemMapper.itemToDto(updatedItem);
+        return ItemMapper.itemToDto(updatedItem);
     }
 
     public List<ItemDto> getItemsBySearch(String text) {
@@ -110,7 +120,7 @@ public class ItemService {
         if (!text.isBlank()) {
             itemsDtoBySearch = itemRepository.findByAvailableTrueAndNameIgnoreCaseContainingOrDescriptionIgnoreCaseContaining(text, text)
                     .stream()
-                    .map(ru.practicum.shareit.item.mapper.ItemMapper::itemToDto)
+                    .map(ItemMapper::itemToDto)
                     .toList();
         }
         return itemsDtoBySearch;

@@ -1,15 +1,14 @@
 package ru.practicum.shareit.request.dto;
 
-import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
-public class ItemRequestDto {
+public class ItemRequestDtoWithResponses {
     private Long id;
-    @NotBlank
     private String description;
     private LocalDateTime created;
-    private Long requesterId;
+    private List<ItemResponseDto> items;
 }
