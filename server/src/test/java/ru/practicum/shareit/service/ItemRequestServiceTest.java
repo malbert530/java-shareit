@@ -85,7 +85,7 @@ public class ItemRequestServiceTest {
 
     @Test
     void getAllRequests() {
-        when(itemRequestRepository.findAllByOrderByCreatedDesc()).thenReturn(List.of(itemRequest));
+        when(itemRequestRepository.findAllByRequesterIdNotOrderByCreatedDesc(owner.getId())).thenReturn(List.of(itemRequest));
 
         List<ItemRequestDto> allRequests = service.getAllRequests(owner.getId());
 

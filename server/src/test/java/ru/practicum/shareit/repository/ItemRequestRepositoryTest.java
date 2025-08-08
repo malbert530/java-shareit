@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class ItemRequestRepositoryTest {
     private final UserRepository userRepository;
     private final ItemRequestRepository requestRepository;
+    private Long userId;
     private User user;
     private User requester;
     private ItemRequest requestToSave;
@@ -37,7 +38,7 @@ public class ItemRequestRepositoryTest {
         user.setName(name);
         user.setEmail(email);
 
-        userRepository.save(user);
+        userId = userRepository.save(user).getId();
 
         requester = new User();
         requester.setName("Tom");
@@ -55,7 +56,7 @@ public class ItemRequestRepositoryTest {
 
     @Test
     void findAllByOrderByCreatedDesc() {
-        List<ItemRequest> allRequests = requestRepository.findAllByOrderByCreatedDesc();
+        List<ItemRequest> allRequests = requestRepository.findAllByRequesterIdNotOrderByCreatedDesc(userId);
 
         assertNotNull(allRequests);
         assertThat(allRequests.getFirst()).usingRecursiveComparison().ignoringFields("id").isEqualTo(requestToSave);

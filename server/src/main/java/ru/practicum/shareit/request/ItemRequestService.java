@@ -18,7 +18,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import static java.util.stream.Collectors.groupingBy;
 
@@ -39,8 +38,8 @@ public class ItemRequestService {
     }
 
     public List<ItemRequestDto> getAllRequests(Long userId) {
-        List<ItemRequest> allRequests = itemRequestRepository.findAllByOrderByCreatedDesc();
-        return allRequests.stream().filter(request -> !Objects.equals(request.getRequester().getId(), userId)).map(ItemRequestMapper::requestToDto).toList();
+        List<ItemRequest> allRequests = itemRequestRepository.findAllByRequesterIdNotOrderByCreatedDesc(userId);
+        return allRequests.stream().map(ItemRequestMapper::requestToDto).toList();
     }
 
     public List<ItemRequestDtoWithResponses> getAllUserRequests(Long userId) {
@@ -51,11 +50,11 @@ public class ItemRequestService {
 
         return allUserRequests.stream()
                 .map(request -> {
-            List<ItemResponseDto> itemResponses = items.getOrDefault(request.getId(), new ArrayList<>()).stream()
-                    .map(ItemMapper::toItemResponseDto)
-                    .toList();
-            return ItemRequestMapper.toDtoWithResponses(request, itemResponses);
-        }).toList();
+                    List<ItemResponseDto> itemResponses = items.getOrDefault(request.getId(), new ArrayList<>()).stream()
+                            .map(ItemMapper::toItemResponseDto)
+                            .toList();
+                    return ItemRequestMapper.toDtoWithResponses(request, itemResponses);
+                }).toList();
     }
 
     public ItemRequestDtoWithResponses getRequestById(Long requestId) {
