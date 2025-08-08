@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 
+import java.util.ArrayList;
+
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -31,7 +33,7 @@ public class ItemController {
     @GetMapping("/search")
     public ResponseEntity<Object> getItemsBySearch(@RequestParam String text) {
         log.info("Get items by search");
-        return itemClient.getItemsBySearch(text);
+        return text.isBlank() ? ResponseEntity.ok(new ArrayList<>())  : itemClient.getItemsBySearch(text);
     }
 
     @PostMapping

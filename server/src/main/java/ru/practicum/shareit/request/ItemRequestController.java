@@ -22,9 +22,9 @@ public class ItemRequestController {
     }
 
     @GetMapping("/all")
-    public List<ItemRequestDto> getAllRequests() {
+    public List<ItemRequestDto> getAllRequests(@RequestHeader("X-Sharer-User-Id") Long userId) {
         log.info("Получен HTTP-запрос на получение списка запросов всех пользователей");
-        return itemRequestService.getAllRequests();
+        return itemRequestService.getAllRequests(userId);
     }
 
     @GetMapping()

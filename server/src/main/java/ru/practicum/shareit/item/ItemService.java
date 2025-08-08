@@ -116,14 +116,10 @@ public class ItemService {
     }
 
     public List<ItemDto> getItemsBySearch(String text) {
-        List<ItemDto> itemsDtoBySearch = new ArrayList<>();
-        if (!text.isBlank()) {
-            itemsDtoBySearch = itemRepository.findByAvailableTrueAndNameIgnoreCaseContainingOrDescriptionIgnoreCaseContaining(text, text)
-                    .stream()
-                    .map(ItemMapper::itemToDto)
-                    .toList();
-        }
-        return itemsDtoBySearch;
+        return itemRepository.findByAvailableTrueAndNameIgnoreCaseContainingOrDescriptionIgnoreCaseContaining(text, text)
+                .stream()
+                .map(ItemMapper::itemToDto)
+                .toList();
     }
 
     public CommentDto createComment(Long userId, Long itemId, CommentDto commentDto) {

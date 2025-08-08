@@ -87,7 +87,7 @@ public class ItemRequestServiceTest {
     void getAllRequests() {
         when(itemRequestRepository.findAllByOrderByCreatedDesc()).thenReturn(List.of(itemRequest));
 
-        List<ItemRequestDto> allRequests = service.getAllRequests();
+        List<ItemRequestDto> allRequests = service.getAllRequests(owner.getId());
 
         assertNotNull(allRequests);
         assertEquals(allRequests.getFirst().getRequesterId(), userId);

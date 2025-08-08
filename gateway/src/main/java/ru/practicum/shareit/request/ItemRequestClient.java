@@ -28,8 +28,8 @@ public class ItemRequestClient extends BaseClient {
         return post("", userId, itemRequestDto);
     }
 
-    public ResponseEntity<Object> getAllRequests() {
-        return get("/all");
+    public ResponseEntity<Object> getAllRequests(Long userId) {
+        return get("/all", userId);
     }
 
     public ResponseEntity<Object> getAllUserRequests(Long userId) {

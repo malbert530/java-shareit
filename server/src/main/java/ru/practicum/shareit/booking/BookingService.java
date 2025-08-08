@@ -117,12 +117,6 @@ public class BookingService {
 
     public BookingResponseDto create(Long userId, BookingCreateDto bookingCreateDto) {
         User user = userService.getUserIfExistOrElseThrow(userId);
-        if (!bookingCreateDto.getStart().isBefore(bookingCreateDto.getEnd())) {
-            String errorMessage = String.format("Дата старта аренды %s должна быть раньше даты окончания %s",
-                    bookingCreateDto.getStart(), bookingCreateDto.getEnd());
-            log.warn(errorMessage);
-            throw new WrongBookingDatesException(errorMessage);
-        }
         Long itemId = bookingCreateDto.getItemId();
         Item item = itemService.getItemIfExistOrElseThrow(itemId);
         if (!item.getAvailable()) {

@@ -23,6 +23,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -98,10 +99,11 @@ public class ItemRequestControllerTest {
     @SneakyThrows
     void getAllRequestsTest() {
 
-        when(service.getAllRequests()).thenReturn(List.of(response));
+        when(service.getAllRequests(anyLong())).thenReturn(List.of(response));
 
         mockMvc
-                .perform(get("/requests/all"))
+                .perform(get("/requests/all")
+                        .header("X-Sharer-User-Id", userId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(requestId))
                 .andExpect(jsonPath("$[0].description").value(description));

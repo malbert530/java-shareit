@@ -81,15 +81,6 @@ public class BookingServiceTest {
     }
 
     @Test
-    void create_endDateBeforeStart_shouldThrowException() {
-        when(userService.getUserIfExistOrElseThrow(bookerId)).thenReturn(booker);
-        bookingCreateDto.setStart(secondDate);
-        bookingCreateDto.setEnd(firstDate);
-
-        assertThrows(WrongBookingDatesException.class, () -> service.create(bookerId, bookingCreateDto));
-    }
-
-    @Test
     void create_itemNotAvailable_shouldThrowException() {
         when(userService.getUserIfExistOrElseThrow(bookerId)).thenReturn(booker);
         when(itemService.getItemIfExistOrElseThrow(itemId)).thenReturn(item);

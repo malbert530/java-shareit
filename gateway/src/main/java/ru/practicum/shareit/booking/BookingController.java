@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ru.practicum.shareit.booking.dto.BookingCreateDto;
+import ru.practicum.shareit.exception.WrongBookingDatesException;
 
 
 @RestController
@@ -40,6 +41,12 @@ public class BookingController {
     public ResponseEntity<Object> createBooking(@RequestHeader("X-Sharer-User-Id") Long userId,
                                                 @RequestBody @Valid BookingCreateDto requestDto) {
         log.info("Creating booking {}, userId={}", requestDto, userId);
+        if (!requestDto.getStart().isBefore(requestDto.getEnd())) {
+            String errorMessage = String.format("Дата старта аренды %s должна быть раньше даты окончания %s",
+                    requestDto.getStart(), requestDto.getEnd());
+            log.warn(errorMessage);
+            throw new WrongBookingDatesException(errorMessage);
+        }
         return bookingClient.createBooking(userId, requestDto);
     }
 

@@ -18,6 +18,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import static java.util.stream.Collectors.groupingBy;
 
@@ -37,9 +38,9 @@ public class ItemRequestService {
         return ItemRequestMapper.requestToDto(savedRequest);
     }
 
-    public List<ItemRequestDto> getAllRequests() {
+    public List<ItemRequestDto> getAllRequests(Long userId) {
         List<ItemRequest> allRequests = itemRequestRepository.findAllByOrderByCreatedDesc();
-        return allRequests.stream().map(ItemRequestMapper::requestToDto).toList();
+        return allRequests.stream().filter(request -> !Objects.equals(request.getRequester().getId(), userId)).map(ItemRequestMapper::requestToDto).toList();
     }
 
     public List<ItemRequestDtoWithResponses> getAllUserRequests(Long userId) {
